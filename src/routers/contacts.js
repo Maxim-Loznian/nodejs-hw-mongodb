@@ -1,14 +1,18 @@
 const express = require('express');
-const router = express.Router();
 const {
     getAllContactsController,
-    getContactByIdController
-} = require('../controllers/contacts'); // Імпорт контролерів
+    getContactByIdController,
+    createContactController,
+    updateContactController,
+    deleteContactController, // Імпортуємо новий контролер
+} = require('../controllers/contacts');
 
-// Маршрут для отримання всіх контактів
+const router = express.Router();
+
 router.get('/', getAllContactsController);
-
-// Маршрут для отримання контакту за ID
 router.get('/:contactId', getContactByIdController);
+router.post('/', createContactController);
+router.patch('/:contactId', updateContactController); // Додаємо маршрут PATCH
+router.delete('/:contactId', deleteContactController); // Додаємо новий маршрут DELETE
 
 module.exports = router;
