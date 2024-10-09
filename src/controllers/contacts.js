@@ -1,6 +1,6 @@
 const pino = require('pino')();
 const { getAllContacts, getContactById, createContact, updateContact, deleteContact } = require('../services/contacts');
-const createError = require('http-errors'); // Імпорт http-errors
+const createError = require('http-errors');
 const mongoose = require('mongoose');
 
 // Контролер для отримання всіх контактів
@@ -23,13 +23,13 @@ const getContactByIdController = async (req, res, next) => {
     const { contactId } = req.params;
 
     if (!mongoose.Types.ObjectId.isValid(contactId)) {
-        return next(createError(404, "Contact not found"));
+        throw createError(404, "Contact not found");
     }
 
     try {
         const contact = await getContactById(contactId);
         if (!contact) {
-            return next(createError(404, "Contact not found"));
+            throw createError(404, "Contact not found");
         }
         res.status(200).json({
             status: 200,
@@ -48,7 +48,7 @@ const createContactController = async (req, res, next) => {
 
     // Перевірка на обов'язкові поля
     if (!name || !phoneNumber || !contactType) {
-        return next(createError(400, "Name, phoneNumber, and contactType are required"));
+        throw createError(400, "Name, phoneNumber, and contactType are required");
     }
 
     try {
@@ -70,17 +70,18 @@ const updateContactController = async (req, res, next) => {
     const updates = req.body;
 
     if (!mongoose.Types.ObjectId.isValid(contactId)) {
-        return next(createError(404, "Contact not found"));
+        throw createError(404, "Contact not found");
     }
 
     try {
         const updatedContact = await updateContact(contactId, updates);
         if (!updatedContact) {
-            return next(createError(404, "Contact not found"));
+            throw createError(404, "Contact not found");
         }
+
         res.status(200).json({
             status: 200,
-            message: "Successfully patched a contact!",
+            message: "Successfully patched the contact!",
             data: updatedContact,
         });
     } catch (error) {
@@ -94,13 +95,13 @@ const deleteContactController = async (req, res, next) => {
     const { contactId } = req.params;
 
     if (!mongoose.Types.ObjectId.isValid(contactId)) {
-        return next(createError(404, "Contact not found"));
+        throw createError(404, "Contact not found");
     }
 
     try {
         const deletedContact = await deleteContact(contactId);
         if (!deletedContact) {
-            return next(createError(404, "Contact not found"));
+            throw createError(404, "Contact not found");
         }
         res.status(204).send(); // Відповідь без тіла для успішного видалення
     } catch (error) {
@@ -114,5 +115,5 @@ module.exports = {
     getContactByIdController,
     createContactController,
     updateContactController,
-    deleteContactController, // Додаємо контролер видалення
+    deleteContactController,
 };

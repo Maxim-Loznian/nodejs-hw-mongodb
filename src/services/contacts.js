@@ -1,29 +1,34 @@
 const Contact = require('../models/contact');
 
-// Функція для отримання всіх контактів
+// Отримати всі контакти
 const getAllContacts = async () => {
     return await Contact.find();
 };
 
-// Функція для отримання контакту за ID
-const getContactById = async (contactId) => {
-    return await Contact.findById(contactId);
+// Отримати контакт за ID
+const getContactById = async (id) => {
+    return await Contact.findById(id);
 };
 
-// Функція для створення нового контакту
+// Створити новий контакт
 const createContact = async (contactData) => {
-    const newContact = new Contact(contactData);
-    return await newContact.save();
+    return await Contact.create(contactData);
 };
 
-// Функція для видалення контакту
-const deleteContact = async (contactId) => {
-    return await Contact.findByIdAndDelete(contactId);
+// Оновити існуючий контакт
+const updateContact = async (id, updates) => {
+    return await Contact.findByIdAndUpdate(id, updates, { new: true, runValidators: true });
+};
+
+// Видалити контакт
+const deleteContact = async (id) => {
+    return await Contact.findByIdAndDelete(id);
 };
 
 module.exports = {
     getAllContacts,
     getContactById,
     createContact,
-    deleteContact, // Експортуємо новий сервіс
+    updateContact,
+    deleteContact,
 };
