@@ -1,28 +1,50 @@
-const Contact = require('../models/contact');
+const Contact = require('../models/contact'); // Змініть на правильний шлях до вашої моделі
 
-// Отримати всі контакти
-const getAllContacts = async () => {
-    return await Contact.find();
+// Отримання всіх контактів з пагінацією, сортуванням та фільтрацією
+const getAllContacts = async (page = 1, perPage = 10, sortBy = 'name', sortOrder = 'asc', filterOptions = {}) => {
+    const { type, isFavourite } = filterOptions;
+
+    const query = {}; // Об'єкт запиту для фільтрації
+
+    if (type) {
+        query.contactType = type; // Додаємо фільтр за типом
+    }
+
+    if (isFavourite !== undefined) {
+        query.isFavourite = isFavourite === 'true'; // Додаємо фільтр за isFavourite
+    }
+
+    const sortOptions = { [sortBy]: sortOrder === 'asc' ? 1 : -1 }; // Визначаємо параметри сортування
+
+    const contacts = await Contact.find(query) // Застосовуємо фільтр
+        .sort(sortOptions) // Додаємо сортування
+        .skip((page - 1) * perPage) // Пропускаємо попередні контакти
+        .limit(perPage); // Лімітуємо кількість контактів на сторінці
+
+    const totalItems = await Contact.countDocuments(query); // Загальна кількість контактів з фільтром
+
+    return { contacts, totalItems };
 };
 
-// Отримати контакт за ID
-const getContactById = async (id) => {
-    return await Contact.findById(id);
+// Отримання контакту за ID
+const getContactById = async (contactId) => {
+    return await Contact.findById(contactId);
 };
 
-// Створити новий контакт
+// Створення нового контакту
 const createContact = async (contactData) => {
-    return await Contact.create(contactData);
+    const contact = new Contact(contactData);
+    return await contact.save();
 };
 
-// Оновити існуючий контакт
-const updateContact = async (id, updates) => {
-    return await Contact.findByIdAndUpdate(id, updates, { new: true, runValidators: true });
+// Оновлення існуючого контакту
+const updateContact = async (contactId, updates) => {
+    return await Contact.findByIdAndUpdate(contactId, updates, { new: true });
 };
 
-// Видалити контакт
-const deleteContact = async (id) => {
-    return await Contact.findByIdAndDelete(id);
+// Видалення існуючого контакту
+const deleteContact = async (contactId) => {
+    return await Contact.findByIdAndDelete(contactId);
 };
 
 module.exports = {

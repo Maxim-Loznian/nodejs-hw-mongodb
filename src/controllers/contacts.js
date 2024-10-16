@@ -3,14 +3,27 @@ const { getAllContacts, getContactById, createContact, updateContact, deleteCont
 const createError = require('http-errors');
 const mongoose = require('mongoose');
 
-// Контролер для отримання всіх контактів
+// Контролер для отримання всіх контактів з пагінацією, сортуванням та фільтрацією
 const getAllContactsController = async (req, res, next) => {
     try {
-        const contacts = await getAllContacts();
+        const { page = 1, perPage = 10, sortBy = 'name', sortOrder = 'asc', type, isFavourite } = req.query;
+
+        const filterOptions = { type, isFavourite }; // Фільтри для запиту
+        const { contacts, totalItems } = await getAllContacts(Number(page), Number(perPage), sortBy, sortOrder, filterOptions);
+        const totalPages = Math.ceil(totalItems / perPage);
+
         res.status(200).json({
             status: 200,
             message: "Successfully found contacts!",
-            data: contacts,
+            data: {
+                data: contacts,
+                page: Number(page),
+                perPage: Number(perPage),
+                totalItems,
+                totalPages,
+                hasPreviousPage: Number(page) > 1,
+                hasNextPage: Number(page) < totalPages,
+            },
         });
     } catch (error) {
         pino.error('Error fetching contacts:', error);
@@ -46,7 +59,6 @@ const getContactByIdController = async (req, res, next) => {
 const createContactController = async (req, res, next) => {
     const { name, phoneNumber, email, isFavourite, contactType } = req.body;
 
-    // Перевірка на обов'язкові поля
     if (!name || !phoneNumber || !contactType) {
         throw createError(400, "Name, phoneNumber, and contactType are required");
     }
@@ -103,7 +115,7 @@ const deleteContactController = async (req, res, next) => {
         if (!deletedContact) {
             throw createError(404, "Contact not found");
         }
-        res.status(204).send(); // Відповідь без тіла для успішного видалення
+        res.status(204).send();
     } catch (error) {
         pino.error('Error deleting contact:', error);
         next(createError(500, "Something went wrong"));
