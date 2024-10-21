@@ -1,4 +1,4 @@
-const Contact = require('../models/contact'); // Змініть на правильний шлях до вашої моделі
+const Contact = require('../models/Contact'); // Змініть на правильний шлях до вашої моделі
 
 // Отримання всіх контактів з пагінацією, сортуванням та фільтрацією
 const getAllContacts = async (page = 1, perPage = 10, sortBy = 'name', sortOrder = 'asc', filterOptions = {}) => {

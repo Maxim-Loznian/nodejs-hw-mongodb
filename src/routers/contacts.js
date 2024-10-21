@@ -1,20 +1,14 @@
 const express = require('express');
-const { validateBody, isValidId } = require('../middlewares/validation');
-const { createContactSchema, updateContactSchema } = require('../models/contactValidation');
-const {
-  getAllContactsController,
-  getContactByIdController,
-  createContactController,
-  updateContactController,
-  deleteContactController,
-} = require('../controllers/contacts');
+const { createContact, getContacts, getContactById } = require('../controllers/contacts');
+const { isValidId } = require('../middlewares/validation');
+const authenticate = require('../middlewares/authenticate');
 
 const router = express.Router();
 
-router.get('/', getAllContactsController);
-router.get('/:contactId', isValidId, getContactByIdController);
-router.post('/', validateBody(createContactSchema), createContactController);
-router.patch('/:contactId', isValidId, validateBody(updateContactSchema), updateContactController);
-router.delete('/:contactId', isValidId, deleteContactController);
+router.use(authenticate); // Застосовуємо middleware аутентифікації
+
+router.post('/', createContact);
+router.get('/', getContacts);
+router.get('/:contactId', isValidId, getContactById);
 
 module.exports = router;

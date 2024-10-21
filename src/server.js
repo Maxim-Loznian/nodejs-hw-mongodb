@@ -3,6 +3,7 @@ const cors = require('cors');
 const pino = require('pino')();
 const mongoose = require('mongoose'); // Додано імпорт mongoose
 const contactsRouter = require('./routers/contacts');
+const authRouter = require('./routers/auth'); // Імпорт роутера для auth
 const errorHandler = require('./middlewares/errorHandler');
 const notFoundHandler = require('./middlewares/notFoundHandler');
 
@@ -14,8 +15,9 @@ const setupServer = () => {
     app.use(cors());
     app.use(express.json());
 
-    // Використання роутера для контактів
+    // Використання роутерів
     app.use('/contacts', contactsRouter);
+    app.use('/auth', authRouter); // Додаємо роутер для auth
 
     // Обробка неіснуючих маршрутів
     app.use(notFoundHandler);
