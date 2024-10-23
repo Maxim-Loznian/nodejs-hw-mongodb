@@ -1,36 +1,18 @@
 const createHttpError = require('http-errors');
-const Contact = require('../models/contact');
+const contactsService = require('../services/contacts');
 
-const createContact = async (req, res, next) => {
-  try {
-    const { name, email, phone } = req.body;
-
-    const newContact = new Contact({
-      name,
-      email,
-      phone,
-      userId: req.user.id,
-    });
-
-    await newContact.save();
-
-    res.status(201).json({
-      status: 'success',
-      message: 'Contact created successfully!',
-      data: newContact,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
+// Отримання всіх контактів з параметрами фільтрації, сортування та пагінації
 const getContacts = async (req, res, next) => {
   try {
-    const contacts = await Contact.find({ userId: req.user.id });
+    const userId = req.user.id;
+    const { page = 1, perPage = 10, sortBy = 'name', sortOrder = 'asc', type, isFavourite } = req.query;
+
+    const filterOptions = { type, isFavourite };
+    const { contacts, totalItems } = await contactsService.getAllContacts(userId, page, perPage, sortBy, sortOrder, filterOptions);
 
     res.status(200).json({
-      status: 'success',
-      data: contacts,
+      status: 200,
+      data: { contacts, totalItems },
     });
   } catch (error) {
     next(error);
@@ -40,16 +22,34 @@ const getContacts = async (req, res, next) => {
 const getContactById = async (req, res, next) => {
   try {
     const { contactId } = req.params;
+    const userId = req.user.id;
 
-    const contact = await Contact.findOne({ _id: contactId, userId: req.user.id });
+    const contact = await contactsService.getContactById(userId, contactId);
 
     if (!contact) {
       throw createHttpError(404, 'Contact not found');
     }
 
     res.status(200).json({
-      status: 'success',
+      status: 200,
       data: contact,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const createContact = async (req, res, next) => {
+  try {
+    const { name, email, phone, contactType, isFavourite } = req.body;
+    const userId = req.user.id;
+
+    const newContact = await contactsService.createContact({ name, email, phone, contactType, isFavourite, userId });
+
+    res.status(201).json({
+      status: 201,
+      message: 'Contact created successfully!',
+      data: newContact,
     });
   } catch (error) {
     next(error);
@@ -59,20 +59,17 @@ const getContactById = async (req, res, next) => {
 const updateContact = async (req, res, next) => {
   try {
     const { contactId } = req.params;
-    const { name, email, phone } = req.body; // Отримайте нові дані
+    const userId = req.user.id;
+    const { name, email, phone, contactType, isFavourite } = req.body;
 
-    const updatedContact = await Contact.findOneAndUpdate(
-      { _id: contactId, userId: req.user.id }, // Знайти контакт за ID та ID користувача
-      { name, email, phone }, // Дані для оновлення
-      { new: true, runValidators: true } // Повертає оновлений контакт та виконує валідацію
-    );
+    const updatedContact = await contactsService.updateContact(userId, contactId, { name, email, phone, contactType, isFavourite });
 
     if (!updatedContact) {
       throw createHttpError(404, 'Contact not found');
     }
 
     res.status(200).json({
-      status: 'success',
+      status: 200,
       message: 'Contact updated successfully!',
       data: updatedContact,
     });
@@ -81,12 +78,12 @@ const updateContact = async (req, res, next) => {
   }
 };
 
-// Додайте метод для видалення контакту
 const deleteContact = async (req, res, next) => {
   try {
     const { contactId } = req.params;
+    const userId = req.user.id;
 
-    const deletedContact = await Contact.findOneAndDelete({ _id: contactId, userId: req.user.id });
+    const deletedContact = await contactsService.deleteContact(userId, contactId);
 
     if (!deletedContact) {
       throw createHttpError(404, 'Contact not found');
@@ -99,9 +96,9 @@ const deleteContact = async (req, res, next) => {
 };
 
 module.exports = {
-  createContact,
   getContacts,
   getContactById,
+  createContact,
   updateContact,
-  deleteContact, // Додайте цю лінію
+  deleteContact,
 };
