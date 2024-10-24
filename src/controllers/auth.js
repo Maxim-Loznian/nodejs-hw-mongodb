@@ -1,5 +1,5 @@
 const createHttpError = require('http-errors');
-const authService = require('../services/authService');
+const authService = require('../services/auth');
 
 const register = async (req, res, next) => {
   const { name, email, password } = req.body;
