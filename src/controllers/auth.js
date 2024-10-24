@@ -1,26 +1,16 @@
-const User = require('../models/user');
-const Session = require('../models/session');
 const createHttpError = require('http-errors');
-const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
+const authService = require('../services/authService');
 
 const register = async (req, res, next) => {
   const { name, email, password } = req.body;
 
   try {
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      throw createHttpError(409, 'Email in use');
-    }
-
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const newUser = new User({ name, email, password: hashedPassword });
-    await newUser.save();
+    const newUser = await authService.registerUser({ name, email, password });
 
     res.status(201).json({
-      status: 'success',
+      status: 201,
       message: 'Successfully registered a user!',
-      data: { id: newUser._id, name: newUser.name, email: newUser.email },
+      data: newUser,
     });
   } catch (error) {
     next(error);
@@ -31,28 +21,11 @@ const login = async (req, res, next) => {
   const { email, password } = req.body;
 
   try {
-    const user = await User.findOne({ email });
-    if (!user || !(await bcrypt.compare(password, user.password))) {
-      throw createHttpError(401, 'Invalid email or password');
-    }
-
-    const accessToken = jwt.sign({ id: user._id }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '15m' });
-    const refreshToken = jwt.sign({ id: user._id }, process.env.REFRESH_TOKEN_SECRET, { expiresIn: '30d' });
-
-    await Session.deleteMany({ userId: user._id }); // Видалити стару сесію
-    const newSession = new Session({
-      userId: user._id,
-      accessToken,
-      refreshToken,
-      accessTokenValidUntil: Date.now() + 15 * 60 * 1000, // 15 хвилин
-      refreshTokenValidUntil: Date.now() + 30 * 24 * 60 * 60 * 1000, // 30 днів
-    });
-
-    await newSession.save();
+    const { accessToken, refreshToken } = await authService.loginUser({ email, password });
 
     res.cookie('refreshToken', refreshToken, { httpOnly: true, secure: true });
     res.status(200).json({
-      status: 'success',
+      status: 200,
       message: 'Successfully logged in a user!',
       data: { accessToken },
     });
@@ -69,20 +42,10 @@ const refresh = async (req, res, next) => {
   }
 
   try {
-    const session = await Session.findOne({ refreshToken });
-    if (!session) {
-      throw createHttpError(401, 'Invalid refresh token');
-    }
-
-    const user = await User.findById(session.userId);
-    if (!user) {
-      throw createHttpError(401, 'User not found');
-    }
-
-    const accessToken = jwt.sign({ id: user._id }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '15m' });
+    const { accessToken } = await authService.refreshSession(refreshToken);
 
     res.status(200).json({
-      status: 'success',
+      status: 200,
       message: 'Successfully refreshed a session!',
       data: { accessToken },
     });
@@ -99,7 +62,7 @@ const logout = async (req, res, next) => {
   }
 
   try {
-    await Session.deleteMany({ refreshToken });
+    await authService.logoutUser(refreshToken);
     res.clearCookie('refreshToken');
     res.sendStatus(204);
   } catch (error) {

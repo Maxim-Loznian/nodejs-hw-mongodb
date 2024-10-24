@@ -1,53 +1,81 @@
+const User = require('../models/user');
+const Session = require('../models/session');
 const createHttpError = require('http-errors');
 const bcrypt = require('bcrypt');
-const User = require('../models/user'); // Імпорт моделі користувача
-const jwt = require('jsonwebtoken'); // Імпорт JWT
+const jwt = require('jsonwebtoken');
 
+// Реєстрація нового користувача
 const registerUser = async ({ name, email, password }) => {
-  // Перевірка, чи існує користувач з такою електронною поштою
   const existingUser = await User.findOne({ email });
   if (existingUser) {
-    throw createHttpError(409, 'Email in use'); // Користувач вже існує
+    throw createHttpError(409, 'Email in use');
   }
 
-  // Хешування пароля
   const hashedPassword = await bcrypt.hash(password, 10);
+  const newUser = new User({ name, email, password: hashedPassword });
 
-  // Створення нового користувача
-  const newUser = new User({
-    name,
-    email,
-    password: hashedPassword,
-  });
+  await newUser.save();
 
-  await newUser.save(); // Збереження нового користувача
-
-  // Повернення нового користувача без пароля
-  const userData = newUser.toObject(); // Конвертація в об'єкт
-  delete userData.password; // Видаляємо поле з паролем
-  return userData; // Повертаємо дані нового користувача
+  const userData = newUser.toObject();
+  delete userData.password;
+  return userData;
 };
 
-// Додайте цю функцію для аутентифікації
+// Авторизація користувача
 const loginUser = async ({ email, password }) => {
-  // Знайти користувача за email
   const user = await User.findOne({ email });
   if (!user) {
-    throw createHttpError(401, 'Invalid email or password'); // Користувача не знайдено
+    throw createHttpError(401, 'Invalid email or password');
   }
 
-  // Перевірка пароля
   const isPasswordValid = await bcrypt.compare(password, user.password);
   if (!isPasswordValid) {
-    throw createHttpError(401, 'Invalid email or password'); // Невірний пароль
+    throw createHttpError(401, 'Invalid email or password');
   }
 
-  // Генерація токенів
   const accessToken = jwt.sign({ id: user._id }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '15m' });
   const refreshToken = jwt.sign({ id: user._id }, process.env.REFRESH_TOKEN_SECRET, { expiresIn: '30d' });
 
-  // Повернення токенів
+  await Session.deleteMany({ userId: user._id });
+
+  const newSession = new Session({
+    userId: user._id,
+    accessToken,
+    refreshToken,
+    accessTokenValidUntil: Date.now() + 15 * 60 * 1000,
+    refreshTokenValidUntil: Date.now() + 30 * 24 * 60 * 60 * 1000,
+  });
+
+  await newSession.save();
+
   return { accessToken, refreshToken };
 };
 
-module.exports = { registerUser, loginUser };
+// Оновлення токену доступу
+const refreshSession = async (refreshToken) => {
+  const session = await Session.findOne({ refreshToken });
+  if (!session) {
+    throw createHttpError(401, 'Invalid refresh token');
+  }
+
+  const user = await User.findById(session.userId);
+  if (!user) {
+    throw createHttpError(401, 'User not found');
+  }
+
+  const accessToken = jwt.sign({ id: user._id }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '15m' });
+
+  return { accessToken };
+};
+
+// Вихід з системи
+const logoutUser = async (refreshToken) => {
+  await Session.deleteMany({ refreshToken });
+};
+
+module.exports = {
+  registerUser,
+  loginUser,
+  refreshSession,
+  logoutUser,
+};

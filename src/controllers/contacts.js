@@ -10,9 +10,18 @@ const getContacts = async (req, res, next) => {
     const filterOptions = { type, isFavourite };
     const { contacts, totalItems } = await contactsService.getAllContacts(userId, page, perPage, sortBy, sortOrder, filterOptions);
 
+    // Визначення загальної кількості сторінок
+    const totalPages = Math.ceil(totalItems / perPage);
+
     res.status(200).json({
       status: 200,
-      data: { contacts, totalItems },
+      data: {
+        contacts,
+        page: parseInt(page, 10),         // Номер поточної сторінки
+        perPage: parseInt(perPage, 10),   // Кількість контактів на сторінці
+        totalItems,                       // Загальна кількість контактів
+        totalPages,                       // Загальна кількість сторінок
+      },
     });
   } catch (error) {
     next(error);
@@ -42,6 +51,12 @@ const getContactById = async (req, res, next) => {
 const createContact = async (req, res, next) => {
   try {
     const { name, email, phone, contactType, isFavourite } = req.body;
+
+    // Додаємо валідацію для phoneNumber
+    if (!phone) {
+      throw createHttpError(400, 'Contact validation failed: phoneNumber: Path `phoneNumber` is required.');
+    }
+
     const userId = req.user.id;
 
     const newContact = await contactsService.createContact({ name, email, phone, contactType, isFavourite, userId });
