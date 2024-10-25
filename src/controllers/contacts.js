@@ -1,5 +1,7 @@
 const createHttpError = require('http-errors');
 const contactsService = require('../services/contacts');
+const { validateBody } = require('../middlewares/validation');
+const { contactSchema } = require('../schemas/contact');
 
 // Отримання всіх контактів з параметрами фільтрації, сортування та пагінації
 const getContacts = async (req, res, next) => {
@@ -56,6 +58,9 @@ const getContactById = async (req, res, next) => {
 // Створення нового контакту
 const createContact = async (req, res, next) => {
   try {
+    // Валідація тіла запиту
+    await validateBody(contactSchema)(req, res, next);
+
     const { name, email, phoneNumber, contactType, isFavourite } = req.body;
     const userId = req.user.id;
 
@@ -67,7 +72,8 @@ const createContact = async (req, res, next) => {
       data: newContact,
     });
   } catch (error) {
-    next(error);
+    // Переконатися, що статус і повідомлення у правильному форматі
+    return next(createHttpError(400, `Contact validation failed: ${error.message}`));
   }
 };
 
@@ -76,6 +82,10 @@ const updateContact = async (req, res, next) => {
   try {
     const { contactId } = req.params;
     const userId = req.user.id;
+
+    // Валідація тіла запиту
+    await validateBody(contactSchema)(req, res, next);
+
     const { name, email, phoneNumber, contactType, isFavourite } = req.body;
 
     const updatedContact = await contactsService.updateContact(userId, contactId, { name, email, phoneNumber, contactType, isFavourite });
@@ -90,7 +100,7 @@ const updateContact = async (req, res, next) => {
       data: updatedContact,
     });
   } catch (error) {
-    next(error);
+    return next(createHttpError(400, `Contact validation failed: ${error.message}`));
   }
 };
 
