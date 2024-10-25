@@ -17,7 +17,7 @@ const validateBody = (schema) => (req, res, next) => {
 
   if (error) {
     const errorMessage = error.details.map((err) => err.message).join(', ');
-    return next(createError(400, errorMessage));
+    return next(createError(400, `Contact validation failed: ${errorMessage}`));
   }
   next();
 };

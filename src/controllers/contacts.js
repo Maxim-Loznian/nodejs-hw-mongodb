@@ -10,17 +10,21 @@ const getContacts = async (req, res, next) => {
     const filterOptions = { type, isFavourite };
     const { contacts, totalItems } = await contactsService.getAllContacts(userId, page, perPage, sortBy, sortOrder, filterOptions);
 
-    // Визначення загальної кількості сторінок
+    // Визначення загальної кількості сторінок та наявності попередньої/наступної сторінок
     const totalPages = Math.ceil(totalItems / perPage);
+    const hasPrevPage = page > 1;
+    const hasNextPage = page < totalPages;
 
     res.status(200).json({
       status: 200,
       data: {
         contacts,
-        page: parseInt(page, 10),         // Номер поточної сторінки
-        perPage: parseInt(perPage, 10),   // Кількість контактів на сторінці
-        totalItems,                       // Загальна кількість контактів
-        totalPages,                       // Загальна кількість сторінок
+        page: parseInt(page, 10),
+        perPage: parseInt(perPage, 10),
+        totalItems,
+        totalPages,
+        hasPrevPage,
+        hasNextPage,
       },
     });
   } catch (error) {
@@ -28,6 +32,7 @@ const getContacts = async (req, res, next) => {
   }
 };
 
+// Отримання контакту за ID
 const getContactById = async (req, res, next) => {
   try {
     const { contactId } = req.params;
@@ -48,18 +53,13 @@ const getContactById = async (req, res, next) => {
   }
 };
 
+// Створення нового контакту
 const createContact = async (req, res, next) => {
   try {
-    const { name, email, phone, contactType, isFavourite } = req.body;
-
-    // Додаємо валідацію для phoneNumber
-    if (!phone) {
-      throw createHttpError(400, 'Contact validation failed: phoneNumber: Path `phoneNumber` is required.');
-    }
-
+    const { name, email, phoneNumber, contactType, isFavourite } = req.body;
     const userId = req.user.id;
 
-    const newContact = await contactsService.createContact({ name, email, phone, contactType, isFavourite, userId });
+    const newContact = await contactsService.createContact({ name, email, phoneNumber, contactType, isFavourite, userId });
 
     res.status(201).json({
       status: 201,
@@ -71,13 +71,14 @@ const createContact = async (req, res, next) => {
   }
 };
 
+// Оновлення контакту
 const updateContact = async (req, res, next) => {
   try {
     const { contactId } = req.params;
     const userId = req.user.id;
-    const { name, email, phone, contactType, isFavourite } = req.body;
+    const { name, email, phoneNumber, contactType, isFavourite } = req.body;
 
-    const updatedContact = await contactsService.updateContact(userId, contactId, { name, email, phone, contactType, isFavourite });
+    const updatedContact = await contactsService.updateContact(userId, contactId, { name, email, phoneNumber, contactType, isFavourite });
 
     if (!updatedContact) {
       throw createHttpError(404, 'Contact not found');
@@ -93,6 +94,7 @@ const updateContact = async (req, res, next) => {
   }
 };
 
+// Видалення контакту
 const deleteContact = async (req, res, next) => {
   try {
     const { contactId } = req.params;
@@ -104,7 +106,7 @@ const deleteContact = async (req, res, next) => {
       throw createHttpError(404, 'Contact not found');
     }
 
-    res.status(204).send(); // Повертає статус 204 без тіла
+    res.status(204).send();
   } catch (error) {
     next(error);
   }

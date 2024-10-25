@@ -4,19 +4,30 @@ const {
   getContacts,
   getContactById,
   updateContact,
-  deleteContact, // Додано
+  deleteContact,
 } = require('../controllers/contacts');
-const { isValidId } = require('../middlewares/validation');
+const { isValidId, validateBody } = require('../middlewares/validation');
 const authenticate = require('../middlewares/authenticate');
+const { contactSchema } = require('../schemas/contact');
 
 const router = express.Router();
 
-router.use(authenticate); // Застосовуємо middleware аутентифікації
+// Застосовуємо middleware аутентифікації для всіх маршрутів
+router.use(authenticate);
 
-router.post('/', createContact);
+// Створити новий контакт з валідацією тіла запиту
+router.post('/', validateBody(contactSchema), createContact);
+
+// Отримати всі контакти
 router.get('/', getContacts);
+
+// Отримати контакт за ID з валідацією ID
 router.get('/:contactId', isValidId, getContactById);
-router.patch('/:contactId', isValidId, updateContact); // Додано маршрут PATCH
-router.delete('/:contactId', isValidId, deleteContact); // Додано маршрут DELETE
+
+// Оновити контакт з валідацією ID та тіла запиту
+router.patch('/:contactId', isValidId, validateBody(contactSchema), updateContact);
+
+// Видалити контакт з валідацією ID
+router.delete('/:contactId', isValidId, deleteContact);
 
 module.exports = router;
