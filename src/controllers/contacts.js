@@ -1,131 +1,124 @@
-const createHttpError = require('http-errors');
-const contactsService = require('../services/contacts');
-const { validateBody } = require('../middlewares/validation');
-const { contactSchema } = require('../schemas/contact');
+const pino = require('pino')();
+const { getAllContacts, getContactById, createContact, updateContact, deleteContact } = require('../services/contacts');
+const createError = require('http-errors');
+const mongoose = require('mongoose');
 
-// Отримання всіх контактів з параметрами фільтрації, сортування та пагінації
-const getContacts = async (req, res, next) => {
+// Отримання всіх контактів з пагінацією, сортуванням та фільтрацією
+const getAllContactsController = async (req, res, next) => {
   try {
-    const userId = req.user.id;
     const { page = 1, perPage = 10, sortBy = 'name', sortOrder = 'asc', type, isFavourite } = req.query;
-
     const filterOptions = { type, isFavourite };
-    const { contacts, totalItems } = await contactsService.getAllContacts(userId, page, perPage, sortBy, sortOrder, filterOptions);
-
-    // Визначення загальної кількості сторінок та наявності попередньої/наступної сторінок
+    const { contacts, totalItems } = await getAllContacts(Number(page), Number(perPage), sortBy, sortOrder, filterOptions);
     const totalPages = Math.ceil(totalItems / perPage);
-    const hasPrevPage = page > 1;
-    const hasNextPage = page < totalPages;
 
     res.status(200).json({
       status: 200,
+      message: 'Successfully found contacts!',
       data: {
-        contacts,
-        page: parseInt(page, 10),
-        perPage: parseInt(perPage, 10),
+        data: contacts,
+        page: Number(page),
+        perPage: Number(perPage),
         totalItems,
         totalPages,
-        hasPrevPage,
-        hasNextPage,
+        hasPreviousPage: Number(page) > 1,
+        hasNextPage: Number(page) < totalPages,
       },
     });
   } catch (error) {
-    next(error);
+    pino.error('Error fetching contacts:', error);
+    next(createError(500, 'Something went wrong while fetching contacts'));
   }
 };
 
 // Отримання контакту за ID
-const getContactById = async (req, res, next) => {
+const getContactByIdController = async (req, res, next) => {
+  const { contactId } = req.params;
+
+  if (!mongoose.Types.ObjectId.isValid(contactId)) {
+    return next(createError(404, 'Contact not found'));
+  }
+
   try {
-    const { contactId } = req.params;
-    const userId = req.user.id;
-
-    const contact = await contactsService.getContactById(userId, contactId);
-
+    const contact = await getContactById(contactId);
     if (!contact) {
-      throw createHttpError(404, 'Contact not found');
+      return next(createError(404, 'Contact not found'));
     }
 
     res.status(200).json({
       status: 200,
+      message: `Successfully found contact with id ${contactId}!`,
       data: contact,
     });
   } catch (error) {
-    next(error);
+    pino.error('Error fetching contact:', error);
+    next(createError(500, 'Something went wrong while fetching the contact'));
   }
 };
 
 // Створення нового контакту
-const createContact = async (req, res, next) => {
+const createContactController = async (req, res, next) => {
   try {
-    // Валідація тіла запиту
-    await validateBody(contactSchema)(req, res, next);
-
-    const { name, email, phoneNumber, contactType, isFavourite } = req.body;
-    const userId = req.user.id;
-
-    const newContact = await contactsService.createContact({ name, email, phoneNumber, contactType, isFavourite, userId });
-
+    const newContact = await createContact(req.body);
     res.status(201).json({
       status: 201,
-      message: 'Contact created successfully!',
+      message: 'Successfully created a contact!',
       data: newContact,
     });
   } catch (error) {
-    // Переконатися, що статус і повідомлення у правильному форматі
-    return next(createHttpError(400, `Contact validation failed: ${error.message}`));
+    pino.error('Error creating contact:', error);
+    next(createError(500, 'Something went wrong while creating the contact'));
   }
 };
 
-// Оновлення контакту
-const updateContact = async (req, res, next) => {
+// Оновлення існуючого контакту
+const updateContactController = async (req, res, next) => {
+  const { contactId } = req.params;
+
+  if (!mongoose.Types.ObjectId.isValid(contactId)) {
+    return next(createError(404, 'Contact not found'));
+  }
+
   try {
-    const { contactId } = req.params;
-    const userId = req.user.id;
-
-    // Валідація тіла запиту
-    await validateBody(contactSchema)(req, res, next);
-
-    const { name, email, phoneNumber, contactType, isFavourite } = req.body;
-
-    const updatedContact = await contactsService.updateContact(userId, contactId, { name, email, phoneNumber, contactType, isFavourite });
-
+    const updatedContact = await updateContact(contactId, req.body);
     if (!updatedContact) {
-      throw createHttpError(404, 'Contact not found');
+      return next(createError(404, 'Contact not found'));
     }
 
     res.status(200).json({
       status: 200,
-      message: 'Contact updated successfully!',
+      message: 'Successfully updated the contact!',
       data: updatedContact,
     });
   } catch (error) {
-    return next(createHttpError(400, `Contact validation failed: ${error.message}`));
+    pino.error('Error updating contact:', error);
+    next(createError(500, 'Something went wrong while updating the contact'));
   }
 };
 
-// Видалення контакту
-const deleteContact = async (req, res, next) => {
+// Видалення існуючого контакту
+const deleteContactController = async (req, res, next) => {
+  const { contactId } = req.params;
+
+  if (!mongoose.Types.ObjectId.isValid(contactId)) {
+    return next(createError(404, 'Contact not found'));
+  }
+
   try {
-    const { contactId } = req.params;
-    const userId = req.user.id;
-
-    const deletedContact = await contactsService.deleteContact(userId, contactId);
-
+    const deletedContact = await deleteContact(contactId);
     if (!deletedContact) {
-      throw createHttpError(404, 'Contact not found');
+      return next(createError(404, 'Contact not found'));
     }
-
     res.status(204).send();
   } catch (error) {
-    next(error);
+    pino.error('Error deleting contact:', error);
+    next(createError(500, 'Something went wrong while deleting the contact'));
   }
 };
 
 module.exports = {
-  getContacts,
-  getContactById,
-  createContact,
-  updateContact,
-  deleteContact,
+  getAllContactsController,
+  getContactByIdController,
+  createContactController,
+  updateContactController,
+  deleteContactController,
 };
