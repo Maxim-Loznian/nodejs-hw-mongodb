@@ -7,7 +7,7 @@ const mongoose = require('mongoose');
 const getAllContactsController = async (req, res, next) => {
   try {
     const { page = 1, perPage = 10, sortBy = 'name', sortOrder = 'asc', type, isFavourite } = req.query;
-    const filterOptions = { type, isFavourite };
+    const filterOptions = { type, isFavourite, userId: req.user._id }; // Фільтрація контактів тільки для конкретного користувача
     const { contacts, totalItems } = await getAllContacts(Number(page), Number(perPage), sortBy, sortOrder, filterOptions);
     const totalPages = Math.ceil(totalItems / perPage);
 
@@ -40,7 +40,7 @@ const getContactByIdController = async (req, res, next) => {
 
   try {
     const contact = await getContactById(contactId);
-    if (!contact) {
+    if (!contact || contact.userId.toString() !== req.user._id.toString()) {
       return next(createError(404, 'Contact not found'));
     }
 
@@ -58,7 +58,8 @@ const getContactByIdController = async (req, res, next) => {
 // Створення нового контакту
 const createContactController = async (req, res, next) => {
   try {
-    const newContact = await createContact(req.body);
+    const newContactData = { ...req.body, userId: req.user._id }; // Додаємо userId до контакту
+    const newContact = await createContact(newContactData);
     res.status(201).json({
       status: 201,
       message: 'Successfully created a contact!',
@@ -79,11 +80,12 @@ const updateContactController = async (req, res, next) => {
   }
 
   try {
-    const updatedContact = await updateContact(contactId, req.body);
-    if (!updatedContact) {
+    const contact = await getContactById(contactId);
+    if (!contact || contact.userId.toString() !== req.user._id.toString()) {
       return next(createError(404, 'Contact not found'));
     }
 
+    const updatedContact = await updateContact(contactId, req.body);
     res.status(200).json({
       status: 200,
       message: 'Successfully updated the contact!',
@@ -104,10 +106,12 @@ const deleteContactController = async (req, res, next) => {
   }
 
   try {
-    const deletedContact = await deleteContact(contactId);
-    if (!deletedContact) {
+    const contact = await getContactById(contactId);
+    if (!contact || contact.userId.toString() !== req.user._id.toString()) {
       return next(createError(404, 'Contact not found'));
     }
+
+    await deleteContact(contactId);
     res.status(204).send();
   } catch (error) {
     pino.error('Error deleting contact:', error);
