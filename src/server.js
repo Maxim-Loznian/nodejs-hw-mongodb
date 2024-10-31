@@ -1,11 +1,11 @@
-const express = require('express');
-const cors = require('cors');
-const pino = require('pino')();
-const mongoose = require('mongoose'); // Додано імпорт mongoose
-const contactsRouter = require('./routers/contacts');
-const authRouter = require('./routers/auth'); // Імпорт роутера для auth
-const errorHandler = require('./middlewares/errorHandler');
-const notFoundHandler = require('./middlewares/notFoundHandler');
+const express = require('express'); // Імпорт Express
+const cors = require('cors'); // Імпорт CORS
+const pino = require('pino')(); // Імпорт Pino для логування
+const mongoose = require('mongoose'); // Імпорт Mongoose
+const contactsRouter = require('./routers/contacts'); // Імпорт роутера для контактів
+const authRouter = require('./routers/auth'); // Імпорт роутера для авторизації
+const errorHandler = require('./middlewares/errorHandler'); // Імпорт мідлвари для обробки помилок
+const notFoundHandler = require('./middlewares/notFoundHandler'); // Імпорт мідлвари для обробки неіснуючих маршрутів
 
 // Завантаження змінних середовища
 require('dotenv').config();
@@ -38,4 +38,4 @@ const setupServer = () => {
     });
 };
 
-module.exports = setupServer;
+module.exports = setupServer; // Експорт функції налаштування сервера
