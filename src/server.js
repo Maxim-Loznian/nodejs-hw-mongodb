@@ -2,6 +2,7 @@ const express = require('express'); // Імпорт Express
 const cors = require('cors'); // Імпорт CORS
 const pino = require('pino')(); // Імпорт Pino для логування
 const mongoose = require('mongoose'); // Імпорт Mongoose
+const cookieParser = require('cookie-parser'); // Імпорт cookie-parser
 const contactsRouter = require('./routers/contacts'); // Імпорт роутера для контактів
 const authRouter = require('./routers/auth'); // Імпорт роутера для авторизації
 const errorHandler = require('./middlewares/errorHandler'); // Імпорт мідлвари для обробки помилок
@@ -12,8 +13,11 @@ require('dotenv').config();
 
 const setupServer = () => {
     const app = express();
+
+    // Використання middleware
     app.use(cors());
     app.use(express.json());
+    app.use(cookieParser()); // Додайте cookie-parser
 
     // Використання роутерів
     app.use('/contacts', contactsRouter);
