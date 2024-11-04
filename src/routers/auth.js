@@ -1,14 +1,12 @@
-const express = require('express');
-const { register, login, refresh, logout } = require('../controllers/auth');
-const { validateBody } = require('../middlewares/validation');
-const { registerSchema, loginSchema } = require('../schemas/auth');
-const ctrlWrapper = require('../utils/ctrlWrapper'); // Імпорт функції ctrlWrapper
+import express from 'express';
+import { register, login, refresh, logout } from '../controllers/auth.js';
+import ctrlWrapper from '../utils/ctrlWrapper.js';
 
 const router = express.Router();
 
-router.post('/register', validateBody(registerSchema), ctrlWrapper(register));
-router.post('/login', validateBody(loginSchema), ctrlWrapper(login));
-router.post('/refresh', ctrlWrapper(refresh)); // Використання ctrlWrapper
-router.post('/logout', ctrlWrapper(logout)); // Використання ctrlWrapper
+router.post('/register', ctrlWrapper(register));
+router.post('/login', ctrlWrapper(login));
+router.post('/refresh', ctrlWrapper(refresh));
+router.post('/logout', ctrlWrapper(logout));
 
-module.exports = router;
+export default router;

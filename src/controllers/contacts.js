@@ -1,15 +1,16 @@
-const pino = require('pino')();
-const {
+import pino from 'pino';
+import {
   getAllContacts,
   getContactById,
   createContact,
   updateContact,
-  deleteContact
-} = require('../services/contacts');
-const mongoose = require('mongoose');
+  deleteContact,
+} from '../services/contacts.js';
+import mongoose from 'mongoose';
 
-// Отримання всіх контактів
-const getAllContactsController = async (req, res, next) => {
+const logger = pino();
+
+export const getAllContactsController = async (req, res, next) => {
   const userId = req.user.id;
   try {
     const { page = 1, perPage = 10, sortBy = 'name', sortOrder = 'asc', type, isFavourite } = req.query;
@@ -32,13 +33,12 @@ const getAllContactsController = async (req, res, next) => {
       },
     });
   } catch (error) {
-    pino.error('Error fetching contacts:', error);
+    logger.error('Error fetching contacts:', error);
     next({ status: 500, message: 'Something went wrong' });
   }
 };
 
-// Отримання контакту за ID
-const getContactByIdController = async (req, res, next) => {
+export const getContactByIdController = async (req, res, next) => {
   const { contactId } = req.params;
   const userId = req.user.id;
 
@@ -58,13 +58,12 @@ const getContactByIdController = async (req, res, next) => {
       data: contact,
     });
   } catch (error) {
-    pino.error('Error fetching contact:', error);
+    logger.error('Error fetching contact:', error);
     next({ status: 500, message: 'Something went wrong' });
   }
 };
 
-// Створення нового контакту
-const createContactController = async (req, res, next) => {
+export const createContactController = async (req, res, next) => {
   const userId = req.user.id;
   try {
     const newContact = await createContact(req.body, userId);
@@ -74,13 +73,12 @@ const createContactController = async (req, res, next) => {
       data: newContact,
     });
   } catch (error) {
-    pino.error('Error creating contact:', error);
+    logger.error('Error creating contact:', error);
     next({ status: 500, message: 'Something went wrong' });
   }
 };
 
-// Оновлення існуючого контакту
-const updateContactController = async (req, res, next) => {
+export const updateContactController = async (req, res, next) => {
   const { contactId } = req.params;
   const userId = req.user.id;
 
@@ -100,13 +98,12 @@ const updateContactController = async (req, res, next) => {
       data: updatedContact,
     });
   } catch (error) {
-    pino.error('Error updating contact:', error);
+    logger.error('Error updating contact:', error);
     next({ status: 500, message: 'Something went wrong' });
   }
 };
 
-// Видалення існуючого контакту
-const deleteContactController = async (req, res, next) => {
+export const deleteContactController = async (req, res, next) => {
   const { contactId } = req.params;
   const userId = req.user.id;
 
@@ -121,15 +118,7 @@ const deleteContactController = async (req, res, next) => {
     }
     res.status(204).send();
   } catch (error) {
-    pino.error('Error deleting contact:', error);
+    logger.error('Error deleting contact:', error);
     next({ status: 500, message: 'Something went wrong' });
   }
-};
-
-module.exports = {
-  getAllContactsController,
-  getContactByIdController,
-  createContactController,
-  updateContactController,
-  deleteContactController,
 };

@@ -1,7 +1,7 @@
-const createHttpError = require('http-errors');
-const authService = require('../services/auth');
+import createHttpError from 'http-errors';
+import * as authService from '../services/auth.js';
 
-const register = async (req, res, next) => {
+export const register = async (req, res, next) => {
   const { name, email, password } = req.body;
 
   try {
@@ -17,7 +17,7 @@ const register = async (req, res, next) => {
   }
 };
 
-const login = async (req, res, next) => {
+export const login = async (req, res, next) => {
   const { email, password } = req.body;
 
   try {
@@ -34,7 +34,7 @@ const login = async (req, res, next) => {
   }
 };
 
-const refresh = async (req, res, next) => {
+export const refresh = async (req, res, next) => {
   const { refreshToken } = req.cookies;
 
   if (!refreshToken) {
@@ -54,7 +54,7 @@ const refresh = async (req, res, next) => {
   }
 };
 
-const logout = async (req, res, next) => {
+export const logout = async (req, res, next) => {
   const { refreshToken } = req.cookies;
 
   if (!refreshToken) {
@@ -68,11 +68,4 @@ const logout = async (req, res, next) => {
   } catch (error) {
     next(error);
   }
-};
-
-module.exports = {
-  register,
-  login,
-  refresh,
-  logout,
 };

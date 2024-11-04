@@ -1,17 +1,19 @@
-const mongoose = require('mongoose'); // Імпорт Mongoose
-const pino = require('pino')(); // Імпорт Pino для логування
+import mongoose from 'mongoose';
+import pino from 'pino';
+
+const logger = pino();
 
 const initMongoConnection = async () => {
   try {
     const { MONGODB_USER, MONGODB_PASSWORD, MONGODB_URL, MONGODB_DB } = process.env;
     const uri = `mongodb+srv://${MONGODB_USER}:${MONGODB_PASSWORD}@${MONGODB_URL}/${MONGODB_DB}?retryWrites=true&w=majority`;
 
-    await mongoose.connect(uri); // Підключення до MongoDB
-    pino.info('Mongo connection successfully established!'); // Логування успішного підключення
+    await mongoose.connect(uri);
+    logger.info('Mongo connection successfully established!');
   } catch (error) {
-    pino.error('Mongo connection failed:', error.message); // Логування помилки
-    process.exit(1); // Завершення процесу з кодом 1
+    logger.error('Mongo connection failed:', error.message);
+    process.exit(1);
   }
 };
 
-module.exports = initMongoConnection; // Експорт функції ініціалізації
+export default initMongoConnection;

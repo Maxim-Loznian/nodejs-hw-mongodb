@@ -1,6 +1,6 @@
-const createHttpError = require('http-errors');
-const jwt = require('jsonwebtoken');
-const Session = require('../models/session');
+import createHttpError from 'http-errors';
+import jwt from 'jsonwebtoken';
+import Session from '../models/session.js';
 
 const authenticate = async (req, res, next) => {
   try {
@@ -24,4 +24,4 @@ const authenticate = async (req, res, next) => {
   }
 };
 
-module.exports = authenticate;
+export default authenticate;

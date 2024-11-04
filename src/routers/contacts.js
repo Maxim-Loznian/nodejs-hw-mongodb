@@ -1,21 +1,22 @@
-const express = require('express');
-const { validateBody, isValidId } = require('../middlewares/validation');
-const { createContactSchema, updateContactSchema } = require('../models/contactValidation');
-const {
-    getAllContactsController,
-    getContactByIdController,
-    createContactController,
-    updateContactController,
-    deleteContactController,
-} = require('../controllers/contacts');
-const authenticate = require('../middlewares/authenticate');
+import express from 'express';
+import {
+  getAllContactsController,
+  getContactByIdController,
+  createContactController,
+  updateContactController,
+  deleteContactController,
+} from '../controllers/contacts.js';
+import authenticate from '../middlewares/authenticate.js';
+import ctrlWrapper from '../utils/ctrlWrapper.js';
 
 const router = express.Router();
 
-router.get('/', authenticate, getAllContactsController);
-router.get('/:contactId', authenticate, isValidId, getContactByIdController);
-router.post('/', authenticate, validateBody(createContactSchema), createContactController);
-router.patch('/:contactId', authenticate, isValidId, validateBody(updateContactSchema), updateContactController);
-router.delete('/:contactId', authenticate, isValidId, deleteContactController);
+router.use(authenticate);
+router.get('/', ctrlWrapper(getAllContactsController));
+router.get('/:contactId', ctrlWrapper(getContactByIdController));
+router.post('/', ctrlWrapper(createContactController));
+router.patch('/:contactId', ctrlWrapper(updateContactController)); // Змінено на PATCH
+router.put('/:contactId', ctrlWrapper(updateContactController));
+router.delete('/:contactId', ctrlWrapper(deleteContactController));
 
-module.exports = router;
+export default router;

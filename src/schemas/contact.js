@@ -1,4 +1,4 @@
-const Joi = require('joi');
+import Joi from 'joi';
 
 const contactSchema = Joi.object({
   name: Joi.string().required(),
@@ -8,4 +8,4 @@ const contactSchema = Joi.object({
   isFavourite: Joi.boolean().default(false),
 });
 
-module.exports = { contactSchema };
+export { contactSchema };

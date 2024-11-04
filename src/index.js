@@ -1,7 +1,8 @@
-require('dotenv').config(); // Завантаження змінних середовища
+import dotenv from 'dotenv';
+import setupServer from './server.js'; // Імпорт функції налаштування сервера
+import initMongoConnection from './db/initMongoConnection.js'; // Імпорт функції ініціалізації з'єднання з MongoDB
 
-const setupServer = require('./server'); // Імпорт функції налаштування сервера
-const initMongoConnection = require('./db/initMongoConnection'); // Імпорт функції ініціалізації з'єднання з MongoDB
+dotenv.config(); // Завантаження змінних середовища
 
 const startServer = async () => {
   try {

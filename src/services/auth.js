@@ -1,8 +1,8 @@
-const User = require('../models/user');
-const Session = require('../models/session');
-const createHttpError = require('http-errors');
-const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
+import User from '../models/user.js';
+import Session from '../models/session.js';
+import createHttpError from 'http-errors';
+import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
 
 // Реєстрація нового користувача
 const registerUser = async ({ name, email, password }) => {
@@ -73,7 +73,7 @@ const logoutUser = async (refreshToken) => {
   await Session.deleteMany({ refreshToken });
 };
 
-module.exports = {
+export {
   registerUser,
   loginUser,
   refreshSession,

@@ -1,8 +1,7 @@
-const createError = require('http-errors');
-const mongoose = require('mongoose');
+import createError from 'http-errors';
+import mongoose from 'mongoose';
 
-// Middleware для валідації ID
-const isValidId = (req, res, next) => {
+export const isValidId = (req, res, next) => {
   const { contactId } = req.params;
 
   if (!mongoose.Types.ObjectId.isValid(contactId)) {
@@ -11,8 +10,7 @@ const isValidId = (req, res, next) => {
   next();
 };
 
-// Middleware для валідації body
-const validateBody = (schema) => (req, res, next) => {
+export const validateBody = (schema) => (req, res, next) => {
   const { error } = schema.validate(req.body, { abortEarly: false });
 
   if (error) {
@@ -21,5 +19,3 @@ const validateBody = (schema) => (req, res, next) => {
   }
   next();
 };
-
-module.exports = { validateBody, isValidId };
