@@ -73,9 +73,70 @@ const logoutUser = async (refreshToken) => {
   await Session.deleteMany({ refreshToken });
 };
 
+// Генерація токену для скиду паролю
+const generatePasswordResetToken = async (email) => {
+  const user = await User.findOne({ email });
+  if (!user) {
+    throw createHttpError(404, 'User not found');
+  }
+
+  // Генеруємо токен для скиду паролю
+  const resetToken = jwt.sign({ email: user.email }, process.env.JWT_SECRET, { expiresIn: '1h' });
+
+  // Оновлюємо сесію для збереження токену скиду паролю в БД
+  await Session.updateOne(
+    { userId: user._id },
+    { passwordResetToken: resetToken, passwordResetTokenValidUntil: Date.now() + 60 * 60 * 1000 }
+  );
+
+  return resetToken;
+};
+
+// Знайти користувача за email
+const findUserByEmail = async (email) => {
+  const user = await User.findOne({ email });
+  if (!user) {
+    throw createHttpError(404, 'User not found!');
+  }
+  return user;
+};
+
+// Скидання паролю
+const resetPassword = async (token, newPassword) => {
+  let decoded;
+
+  try {
+    decoded = jwt.verify(token, process.env.JWT_SECRET);
+  } catch {
+    throw createHttpError(400, 'Invalid or expired token');
+  }
+
+  const user = await User.findOne({ email: decoded.email });
+  if (!user) {
+    throw createHttpError(404, 'User not found');
+  }
+
+  const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+  // Оновлюємо пароль користувача
+  user.password = hashedPassword;
+  await user.save();
+
+  // Очищаємо токен скиду паролю
+  await Session.updateOne(
+    { userId: user._id },
+    { passwordResetToken: null, passwordResetTokenValidUntil: null }
+  );
+
+  return { message: 'Password has been successfully reset' };
+};
+
 export {
   registerUser,
   loginUser,
   refreshSession,
   logoutUser,
+  generatePasswordResetToken,
+  findUserByEmail,
+  resetPassword,
 };

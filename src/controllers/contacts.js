@@ -7,8 +7,43 @@ import {
   deleteContact,
 } from '../services/contacts.js';
 import mongoose from 'mongoose';
+import multer from 'multer';
+import cloudinary from 'cloudinary';
+import dotenv from 'dotenv';
+
+// Завантажуємо змінні оточення
+dotenv.config();
+
+// Налаштовуємо Cloudinary
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
 const logger = pino();
+
+// Налаштовуємо Multer для обробки multipart/form-data
+const storage = multer.memoryStorage(); // Зберігаємо файли в пам'яті
+const upload = multer({ storage: storage }).single('photo'); // 'photo' — це ім'я поля в формі
+
+// Middleware для завантаження зображень
+const uploadImage = async (file) => {
+  return new Promise((resolve, reject) => {
+    cloudinary.v2.uploader.upload_stream(
+      { resource_type: 'image' }, // Вказуємо, що це зображення
+      (error, result) => {
+        if (error) {
+          reject(error);
+        } else {
+          resolve(result);
+        }
+      }
+    ).end(file.buffer);
+  });
+};
+
+// Контролери для роботи з контактами
 
 export const getAllContactsController = async (req, res, next) => {
   const userId = req.user.id;
@@ -65,17 +100,35 @@ export const getContactByIdController = async (req, res, next) => {
 
 export const createContactController = async (req, res, next) => {
   const userId = req.user.id;
-  try {
-    const newContact = await createContact(req.body, userId);
-    res.status(201).json({
-      status: 201,
-      message: 'Successfully created a contact!',
-      data: newContact,
-    });
-  } catch (error) {
-    logger.error('Error creating contact:', error);
-    next({ status: 500, message: 'Something went wrong' });
-  }
+
+  // Завантажуємо зображення
+  upload(req, res, async (err) => {
+    if (err) {
+      return next({ status: 400, message: 'Error uploading image' });
+    }
+
+    try {
+      let photoUrl = null;
+
+      // Якщо файл є, завантажуємо його в Cloudinary
+      if (req.file) {
+        const result = await uploadImage(req.file);
+        photoUrl = result.secure_url;
+      }
+
+      // Створюємо новий контакт
+      const newContact = await createContact({ ...req.body, photo: photoUrl }, userId);
+
+      res.status(201).json({
+        status: 201,
+        message: 'Successfully created a contact!',
+        data: newContact,
+      });
+    } catch (error) {
+      logger.error('Error creating contact:', error);
+      next({ status: 500, message: 'Something went wrong' });
+    }
+  });
 };
 
 export const updateContactController = async (req, res, next) => {
@@ -86,21 +139,37 @@ export const updateContactController = async (req, res, next) => {
     return next({ status: 400, message: 'Invalid contact ID' });
   }
 
-  try {
-    const updatedContact = await updateContact(contactId, req.body, userId);
-    if (!updatedContact) {
-      return next({ status: 404, message: 'Contact not found' });
+  // Завантажуємо зображення
+  upload(req, res, async (err) => {
+    if (err) {
+      return next({ status: 400, message: 'Error uploading image' });
     }
 
-    res.status(200).json({
-      status: 200,
-      message: 'Successfully updated the contact!',
-      data: updatedContact,
-    });
-  } catch (error) {
-    logger.error('Error updating contact:', error);
-    next({ status: 500, message: 'Something went wrong' });
-  }
+    try {
+      let photoUrl = null;
+
+      // Якщо файл є, завантажуємо його в Cloudinary
+      if (req.file) {
+        const result = await uploadImage(req.file);
+        photoUrl = result.secure_url;
+      }
+
+      // Оновлюємо контакт
+      const updatedContact = await updateContact(contactId, { ...req.body, photo: photoUrl }, userId);
+      if (!updatedContact) {
+        return next({ status: 404, message: 'Contact not found' });
+      }
+
+      res.status(200).json({
+        status: 200,
+        message: 'Successfully updated the contact!',
+        data: updatedContact,
+      });
+    } catch (error) {
+      logger.error('Error updating contact:', error);
+      next({ status: 500, message: 'Something went wrong' });
+    }
+  });
 };
 
 export const deleteContactController = async (req, res, next) => {

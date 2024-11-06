@@ -1,5 +1,6 @@
 import createError from 'http-errors';
 import mongoose from 'mongoose';
+import Joi from 'joi';
 
 export const isValidId = (req, res, next) => {
   const { contactId } = req.params;
@@ -19,3 +20,7 @@ export const validateBody = (schema) => (req, res, next) => {
   }
   next();
 };
+
+export const validateResetPasswordEmail = Joi.object({
+  email: Joi.string().email().required(),
+});

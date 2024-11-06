@@ -23,6 +23,16 @@ const userSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
+  // Додаємо токен для скиду паролю
+  passwordResetToken: {
+    type: String,
+    default: null, // Якщо токен не заданий
+  },
+  // Додаємо час дії токену для скиду паролю
+  passwordResetTokenValidUntil: {
+    type: Date,
+    default: null, // Якщо токен не заданий
+  }
 });
 
 const User = mongoose.model('User', userSchema);

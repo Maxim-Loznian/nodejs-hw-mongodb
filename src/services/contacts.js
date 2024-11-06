@@ -1,5 +1,44 @@
 import Contact from '../models/contact.js';
+import cloudinary from 'cloudinary';
+import dotenv from 'dotenv';
 
+// Завантажуємо змінні оточення
+dotenv.config();
+
+// Налаштовуємо Cloudinary
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
+// Функція для завантаження зображень у Cloudinary
+const uploadImage = async (file) => {
+  return new Promise((resolve, reject) => {
+    // Перевірка типу файлу (тільки зображення)
+    if (!file.mimetype.startsWith('image/')) {
+      reject('The file must be an image');
+      return;
+    }
+
+    // Завантажуємо файл у Cloudinary
+    cloudinary.v2.uploader.upload(
+      file.path,  // Шлях до файлу, якщо він локальний
+      { resource_type: 'image' },
+      (error, result) => {
+        if (error) {
+          console.error('Cloudinary error:', error);  // Лог для помилки
+          reject(error);
+        } else {
+          console.log('Cloudinary upload result:', result);  // Лог для результату
+          resolve(result);
+        }
+      }
+    );
+  });
+};
+
+// Отримати всі контакти
 const getAllContacts = async (userId, page = 1, perPage = 10, sortBy = 'name', sortOrder = 'asc', filterOptions = {}) => {
   const { type, isFavourite } = filterOptions;
 
@@ -25,23 +64,55 @@ const getAllContacts = async (userId, page = 1, perPage = 10, sortBy = 'name', s
   return { contacts, totalItems };
 };
 
+// Отримати контакт за ID
 const getContactById = async (contactId, userId) => {
   return await Contact.findOne({ _id: contactId, userId });
 };
 
-const createContact = async (contactData, userId) => {
-  const contact = new Contact({ ...contactData, userId });
+// Створити новий контакт
+const createContact = async (contactData, userId, file) => {
+  let photoUrl = null;
+
+  // Якщо є файл зображення, завантажуємо його в Cloudinary
+  if (file) {
+    try {
+      const result = await uploadImage(file);
+      photoUrl = result.secure_url;  // Отримуємо URL зображення з Cloudinary
+    } catch (error) {
+      console.error('Error uploading image:', error);
+    }
+  }
+
+  // Створюємо новий контакт
+  const contact = new Contact({ ...contactData, userId, photo: photoUrl });
   return await contact.save();
 };
 
-const updateContact = async (contactId, updates, userId) => {
-  return await Contact.findOneAndUpdate(
+// Оновити контакт
+const updateContact = async (contactId, updates, userId, file) => {
+  let photoUrl = null;
+
+  // Якщо є файл зображення, завантажуємо його в Cloudinary
+  if (file) {
+    try {
+      const result = await uploadImage(file);
+      photoUrl = result.secure_url;  // Отримуємо URL зображення з Cloudinary
+    } catch (error) {
+      console.error('Error uploading image:', error);
+    }
+  }
+
+  // Оновлюємо контакт
+  const updatedContact = await Contact.findOneAndUpdate(
     { _id: contactId, userId },
-    updates,
+    { ...updates, photo: photoUrl },  // Оновлюємо контакт з новим фото, якщо воно є
     { new: true }
   );
+
+  return updatedContact;
 };
 
+// Видалити контакт
 const deleteContact = async (contactId, userId) => {
   return await Contact.findOneAndDelete({ _id: contactId, userId });
 };

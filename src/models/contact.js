@@ -26,6 +26,11 @@ const contactSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     required: true,
+  },
+  // Додаємо нове поле для фото
+  photo: {
+    type: String, // Строковий тип для збереження URL фото
+    default: null, // Якщо фото немає, значення по замовчуванню буде null
   }
 }, { timestamps: true, versionKey: false });
 
