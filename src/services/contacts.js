@@ -23,23 +23,30 @@ const uploadImage = async (file) => {
 
     // Завантажуємо файл у Cloudinary
     cloudinary.v2.uploader.upload(
-      file.path,  // Шлях до файлу, якщо він локальний
+      file.path, // Шлях до файлу, якщо він локальний
       { resource_type: 'image' },
       (error, result) => {
         if (error) {
-          console.error('Cloudinary error:', error);  // Лог для помилки
+          console.error('Cloudinary error:', error); // Лог для помилки
           reject(error);
         } else {
-          console.log('Cloudinary upload result:', result);  // Лог для результату
+          console.log('Cloudinary upload result:', result); // Лог для результату
           resolve(result);
         }
-      }
+      },
     );
   });
 };
 
 // Отримати всі контакти
-const getAllContacts = async (userId, page = 1, perPage = 10, sortBy = 'name', sortOrder = 'asc', filterOptions = {}) => {
+const getAllContacts = async (
+  userId,
+  page = 1,
+  perPage = 10,
+  sortBy = 'name',
+  sortOrder = 'asc',
+  filterOptions = {},
+) => {
   const { type, isFavourite } = filterOptions;
 
   const query = { userId };
@@ -71,32 +78,15 @@ const getContactById = async (contactId, userId) => {
 
 // Створити новий контакт
 const createContact = async (data) => {
-
   // Створюємо новий контакт
   const contact = await Contact.create(data);
   return contact;
 };
 
 // Оновити контакт
-const updateContact = async (contactId, updates, userId, file) => {
-  let photoUrl = null;
-
-  // Якщо є файл зображення, завантажуємо його в Cloudinary
-  if (file) {
-    try {
-      const result = await uploadImage(file);
-      photoUrl = result.secure_url;  // Отримуємо URL зображення з Cloudinary
-    } catch (error) {
-      console.error('Error uploading image:', error);
-    }
-  }
-
+const updateContact = async (data) => {
   // Оновлюємо контакт
-  const updatedContact = await Contact.findOneAndUpdate(
-    { _id: contactId, userId },
-    { ...updates, photo: photoUrl },  // Оновлюємо контакт з новим фото, якщо воно є
-    { new: true }
-  );
+  const updatedContact = await Contact.findOneAndUpdate(data);
 
   return updatedContact;
 };

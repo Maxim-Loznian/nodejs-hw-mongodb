@@ -120,13 +120,6 @@ export const createContactController = async (req, res, next) => {
   let photoUrl;
 
   if (photo) {
-    // Завантажуємо зображення
-    // upload(req, res, async (err) => {
-    // console.log('125', err);
-    // if (err) {
-    //   return next({ status: 400, message: 'Error uploading image' });
-    // }
-
     try {
       // Якщо файл є, завантажуємо його в Cloudinary
 
@@ -154,46 +147,45 @@ export const createContactController = async (req, res, next) => {
 export const updateContactController = async (req, res, next) => {
   const { contactId } = req.params;
   const userId = req.user.id;
+  const photo = req.file; // Отримуємо зображення з запиту
+  let photoUrl;
 
+  // Перевірка валідності ID контакту
   if (!mongoose.Types.ObjectId.isValid(contactId)) {
     return next({ status: 400, message: 'Invalid contact ID' });
   }
 
-  // Завантажуємо зображення
-  // upload(req, res, async (err) => {
-  //   if (err) {
-  //     return next({ status: 400, message: 'Error uploading image' });
-  //   }
-
-    try {
-      let photoUrl = null;
-
-      // Якщо файл є, завантажуємо його в Cloudinary
-      if (req.file) {
-        const result = await uploadImage(req.file);
-        photoUrl = result.secure_url;
-      }
-
-      // Оновлюємо контакт
-      const updatedContact = await updateContact(
-        contactId,
-        { ...req.body, photo: photoUrl },
-        userId,
-      );
-      if (!updatedContact) {
-        return next({ status: 404, message: 'Contact not found' });
-      }
-
-      res.status(200).json({
-        status: 200,
-        message: 'Successfully updated the contact!',
-        data: updatedContact,
-      });
-    } catch (error) {
-      logger.error('Error updating contact:', error);
-      next({ status: 500, message: 'Something went wrong' });
+  try {
+    // Якщо є зображення, завантажуємо його в Cloudinary
+    if (photo) {
+      const result = await uploadImage(photo);
+      photoUrl = result.secure_url; // Отримуємо URL зображення після завантаження
     }
-  });
+
+    // Підготовка даних для оновлення (якщо фото не було передано, воно залишиться undefined)
+    const updatedData = { ...req.body, userId };
+    if (photoUrl) {
+      updatedData.photo = photoUrl; // Додаємо нове фото, якщо воно є
+    }
+
+    // Оновлюємо контакт з новими даними
+    const updatedContact = await updateContact(contactId, updatedData);
+
+    // Якщо контакт не знайдений, повертаємо помилку
+    if (!updatedContact) {
+      return next({ status: 404, message: 'Contact not found' });
+    }
+
+    // Повертаємо відповідь з оновленим контактом
+    res.status(200).json({
+      status: 200,
+      message: 'Successfully updated the contact!',
+      data: updatedContact,
+    });
+  } catch (error) {
+    console.log('Error updating contact:', error);
+    next({ status: 500, message: error.message });
+  }
 };
 
 export const deleteContactController = async (req, res, next) => {
