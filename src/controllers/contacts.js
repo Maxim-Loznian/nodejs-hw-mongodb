@@ -30,16 +30,18 @@ const upload = multer({ storage: storage }).single('photo'); // 'photo' — це
 // Middleware для завантаження зображень
 const uploadImage = async (file) => {
   return new Promise((resolve, reject) => {
-    cloudinary.v2.uploader.upload_stream(
-      { resource_type: 'image' }, // Вказуємо, що це зображення
-      (error, result) => {
-        if (error) {
-          reject(error);
-        } else {
-          resolve(result);
-        }
-      }
-    ).end(file.buffer);
+    cloudinary.v2.uploader
+      .upload_stream(
+        { resource_type: 'image' }, // Вказуємо, що це зображення
+        (error, result) => {
+          if (error) {
+            reject(error);
+          } else {
+            resolve(result);
+          }
+        },
+      )
+      .end(file.buffer);
   });
 };
 
@@ -48,10 +50,24 @@ const uploadImage = async (file) => {
 export const getAllContactsController = async (req, res, next) => {
   const userId = req.user.id;
   try {
-    const { page = 1, perPage = 10, sortBy = 'name', sortOrder = 'asc', type, isFavourite } = req.query;
+    const {
+      page = 1,
+      perPage = 10,
+      sortBy = 'name',
+      sortOrder = 'asc',
+      type,
+      isFavourite,
+    } = req.query;
 
     const filterOptions = { type, isFavourite };
-    const { contacts, totalItems } = await getAllContacts(userId, Number(page), Number(perPage), sortBy, sortOrder, filterOptions);
+    const { contacts, totalItems } = await getAllContacts(
+      userId,
+      Number(page),
+      Number(perPage),
+      sortBy,
+      sortOrder,
+      filterOptions,
+    );
     const totalPages = Math.ceil(totalItems / perPage);
 
     res.status(200).json({
@@ -100,34 +116,38 @@ export const getContactByIdController = async (req, res, next) => {
 
 export const createContactController = async (req, res, next) => {
   const userId = req.user.id;
+  const photo = req.file;
+  let photoUrl;
 
-  // Завантажуємо зображення
-  upload(req, res, async (err) => {
-    if (err) {
-      return next({ status: 400, message: 'Error uploading image' });
-    }
+  if (photo) {
+    // Завантажуємо зображення
+    // upload(req, res, async (err) => {
+    // console.log('125', err);
+    // if (err) {
+    //   return next({ status: 400, message: 'Error uploading image' });
+    // }
 
     try {
-      let photoUrl = null;
-
       // Якщо файл є, завантажуємо його в Cloudinary
-      if (req.file) {
-        const result = await uploadImage(req.file);
-        photoUrl = result.secure_url;
-      }
 
-      // Створюємо новий контакт
-      const newContact = await createContact({ ...req.body, photo: photoUrl }, userId);
-
-      res.status(201).json({
-        status: 201,
-        message: 'Successfully created a contact!',
-        data: newContact,
-      });
+      const result = await uploadImage(photo);
+      photoUrl = result.secure_url;
     } catch (error) {
-      logger.error('Error creating contact:', error);
-      next({ status: 500, message: 'Something went wrong' });
+      console.log('Error creating contact:', error);
+      next({ status: 500, message: error.message });
     }
+    // });
+  }
+  console.log(photoUrl);
+  const data = { ...req.body, userId, photo: photoUrl };
+
+  // Створюємо новий контакт
+  const newContact = await createContact(data);
+
+  res.status(201).json({
+    status: 201,
+    message: 'Successfully created a contact!',
+    data: newContact,
   });
 };
 
@@ -140,10 +160,10 @@ export const updateContactController = async (req, res, next) => {
   }
 
   // Завантажуємо зображення
-  upload(req, res, async (err) => {
-    if (err) {
-      return next({ status: 400, message: 'Error uploading image' });
-    }
+  // upload(req, res, async (err) => {
+  //   if (err) {
+  //     return next({ status: 400, message: 'Error uploading image' });
+  //   }
 
     try {
       let photoUrl = null;
@@ -155,7 +175,11 @@ export const updateContactController = async (req, res, next) => {
       }
 
       // Оновлюємо контакт
-      const updatedContact = await updateContact(contactId, { ...req.body, photo: photoUrl }, userId);
+      const updatedContact = await updateContact(
+        contactId,
+        { ...req.body, photo: photoUrl },
+        userId,
+      );
       if (!updatedContact) {
         return next({ status: 404, message: 'Contact not found' });
       }

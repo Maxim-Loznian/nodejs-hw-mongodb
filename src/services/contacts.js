@@ -70,22 +70,11 @@ const getContactById = async (contactId, userId) => {
 };
 
 // Створити новий контакт
-const createContact = async (contactData, userId, file) => {
-  let photoUrl = null;
-
-  // Якщо є файл зображення, завантажуємо його в Cloudinary
-  if (file) {
-    try {
-      const result = await uploadImage(file);
-      photoUrl = result.secure_url;  // Отримуємо URL зображення з Cloudinary
-    } catch (error) {
-      console.error('Error uploading image:', error);
-    }
-  }
+const createContact = async (data) => {
 
   // Створюємо новий контакт
-  const contact = new Contact({ ...contactData, userId, photo: photoUrl });
-  return await contact.save();
+  const contact = await Contact.create(data);
+  return contact;
 };
 
 // Оновити контакт

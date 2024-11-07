@@ -1,14 +1,11 @@
 import express from 'express'; // Імпорт Express
 import cors from 'cors'; // Імпорт CORS
-import pino from 'pino'; // Імпорт Pino для логування
-import mongoose from 'mongoose'; // Імпорт Mongoose
+import pino from 'pino-http'; // Імпорт Pino для логування
 import cookieParser from 'cookie-parser'; // Імпорт cookie-parser
 import contactsRouter from './routers/contacts.js'; // Імпорт роутера для контактів
 import authRouter from './routers/auth.js'; // Імпорт роутера для авторизації
 import errorHandler from './middlewares/errorHandler.js'; // Імпорт мідлвари для обробки помилок
 import notFoundHandler from './middlewares/notFoundHandler.js'; // Імпорт мідлвари для обробки неіснуючих маршрутів
-
-const logger = pino(); // Ініціалізація логера
 
 const setupServer = () => {
   const app = express();
@@ -29,16 +26,17 @@ const setupServer = () => {
   app.use(errorHandler);
 
   // Підключення до MongoDB
-  const dbUri = `mongodb+srv://${process.env.MONGODB_USER}:${process.env.MONGODB_PASSWORD}@${process.env.MONGODB_URL}/${process.env.MONGODB_DB}?retryWrites=true&w=majority`;
-  
-  mongoose.connect(dbUri, { useNewUrlParser: true, useUnifiedTopology: true })
-    .then(() => logger.info('MongoDB connected successfully'))
-    .catch(err => logger.error('MongoDB connection error:', err));
+  // const dbUri = `mongodb+srv://${process.env.MONGODB_USER}:${process.env.MONGODB_PASSWORD}@${process.env.MONGODB_URL}/${process.env.MONGODB_DB}?retryWrites=true&w=majority`;
 
+  // mongoose.connect(dbUri, { useNewUrlParser: true, useUnifiedTopology: true })
+  //   .then(() => logger.info('MongoDB connected successfully'))
+  //   .catch(err => logger.error('MongoDB connection error:', err));
+
+  app.use(pino({ transport: { target: 'pino-pretty' } }));
   // Запуск сервера
   const PORT = process.env.PORT || 3000;
   app.listen(PORT, () => {
-    logger.info(`Server is running on port ${PORT}`);
+    console.log(`Server is running on port ${PORT}`);
   });
 };
 
