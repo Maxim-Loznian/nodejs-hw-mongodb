@@ -12,6 +12,6 @@ router.post('/logout', ctrlWrapper(logout));
 
 // Нові маршрути для скиду паролю
 router.post('/send-reset-email', ctrlWrapper(sendResetEmail));  // Надсилає лист з токеном
-router.post('/reset-password', ctrlWrapper(resetPassword));  // Скидає пароль за токеном
+router.post('/reset-pwd', ctrlWrapper(resetPassword));  // Скидає пароль за токеном
 
 export default router;
