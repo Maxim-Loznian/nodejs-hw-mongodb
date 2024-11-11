@@ -6,6 +6,8 @@ import contactsRouter from './routers/contacts.js'; // Імпорт роутер
 import authRouter from './routers/auth.js'; // Імпорт роутера для авторизації
 import errorHandler from './middlewares/errorHandler.js'; // Імпорт мідлвари для обробки помилок
 import notFoundHandler from './middlewares/notFoundHandler.js'; // Імпорт мідлвари для обробки неіснуючих маршрутів
+import swaggerUi from 'swagger-ui-express'; // Імпорт swagger-ui-express
+import swaggerDocument from './docs/swagger.json' with { type: 'json' }; // Імпорт swagger документації
 
 const setupServer = () => {
   const app = express();
@@ -14,6 +16,8 @@ const setupServer = () => {
   app.use(cors());
   app.use(express.json());
   app.use(cookieParser()); // Додайте cookie-parser
+
+  app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
   // Використання роутерів
   app.use('/contacts', contactsRouter);

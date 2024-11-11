@@ -1,0 +1,21 @@
+tags:
+  - Contacts
+summary: 'Отримати список всіх контактів'
+operationId: getAllContacts
+description: 'Цей ендпоінт повертає список всіх контактів.'
+responses:
+  200:
+    description: 'Список контактів'
+    content:
+      application/json:
+        schema:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              name:
+                type: string
+              email:
+                type: string

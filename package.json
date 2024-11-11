@@ -8,13 +8,17 @@
     "lint": "eslint src/**/*.js",
     "start": "node ./src/index.js",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "nodemon src/index.js"
+    "dev": "nodemon src/index.js",
+    "build": "npm run build-docs",
+    "build-docs": "redocly bundle --ext json -o docs/swagger.json",
+    "preview-docs": "redocly preview-docs"
   },
   "keywords": [],
   "author": "MAXIM <loznyan84@gmail.com>",
   "license": "ISC",
   "devDependencies": {
     "@eslint/js": "^9.11.1",
+    "@redocly/cli": "^1.25.11",
     "eslint": "^9.11.1",
     "globals": "^15.10.0",
     "nodemon": "^3.1.7"
@@ -35,6 +39,7 @@
     "nodemailer": "^6.9.16",
     "pino": "^9.4.0",
     "pino-http": "^10.3.0",
-    "pino-pretty": "^12.0.0"
+    "pino-pretty": "^12.0.0",
+    "swagger-ui-express": "^5.0.1"
   }
 }

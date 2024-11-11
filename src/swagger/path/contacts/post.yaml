@@ -1,0 +1,18 @@
+tags:
+  - Contacts
+summary: 'Створити новий контакт'
+operationId: createContact
+description: 'Цей ендпоінт дозволяє створити новий контакт.'
+requestBody:
+  content:
+    application/json:
+      schema:
+        type: object
+        properties:
+          name:
+            type: string
+          email:
+            type: string
+responses:
+  201:
+    description: 'Контакт успішно створений'

@@ -13,7 +13,7 @@ cloudinary.config({
 });
 
 // Функція для завантаження зображень у Cloudinary
-const uploadImage = async (file) => {
+const upload = async (file) => {
   return new Promise((resolve, reject) => {
     // Перевірка типу файлу (тільки зображення)
     if (!file.mimetype.startsWith('image/')) {
