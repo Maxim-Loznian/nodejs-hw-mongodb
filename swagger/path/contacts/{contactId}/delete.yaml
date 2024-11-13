@@ -1,17 +1,19 @@
 tags:
   - Contacts
-summary: 'Видалити контакт'
+summary: Delete a contact
 operationId: deleteContact
-description: 'Цей ендпоінт дозволяє видалити контакт за його ID.'
+description: 'Delete a contact'
+security:
+  - bearerAuth: []
 parameters:
-  - name: contactId
-    in: path
-    description: 'ID контакту, який потрібно видалити'
+  - in: path
+    name: id
     required: true
     schema:
       type: string
+    description: 'The ID of the contact to delete'
 responses:
-  200:
-    description: 'Контакт успішно видалений'
-  404:
-    description: 'Контакт не знайдений'
+  '204':
+    description: 'No Content - Contact successfully deleted'
+  '404':
+    $ref: '../../../components/responses/404.yaml'
