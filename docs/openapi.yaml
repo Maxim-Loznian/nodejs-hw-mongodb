@@ -1,17 +1,18 @@
 openapi: 3.1.0
 info:
   version: 1.0.0
-  title: <Contact book>
+  title: Contact book
   license:
     name: Apache 2.0
     url: http://www.apache.org/licenses/LICENSE-2.0.html
-  description: <This is documentation of contact app>
+  description: This is documentation of contact app
 tags:
+  # теги, що ви будете використовувати
   - name: Contacts
-  description: Operations about contacts.
+    description: Operations about contacts.
   - name: Auth
-  description: Auth operations.
-    # теги, що ви будете використовувати
+    description: Auth operations.
+
 servers:
   - url: http://localhost:3000
   - url: #посилання на задеплоєний сайт
@@ -19,19 +20,26 @@ paths:
   # тут будуть посилання на ендпоінти
   /contacts:
     get:
-      $ref: './swagger/paths/contacts/get.yaml'
+      $ref: ../swagger/paths/contacts/get.yaml
     post:
-      $ref: './swagger/paths/contacts/post.yaml'
+      $ref: ../swagger/paths/contacts/post.yaml
   /contacts/{contactId}:
     get:
-      $ref: './swagger/paths/contacts/{contactId}/get.yaml'
+      $ref: ../swagger/paths/contacts/{contactId}/get.yaml
     patch:
-      $ref: './swagger/paths/contacts/{contactId}/patch.yaml'
+      $ref: ../swagger/paths/contacts/{contactId}/patch.yaml
     delete:
-      $ref: './swagger/paths/contacts/{contactId}/delete.yaml'
+      $ref: ../swagger/paths/contacts/{contactId}/delete.yaml
+
 components:
-   contact:
-      $ref: './swagger/components/schemas/contact.yaml'
+  schemas:
+    contact:
+      $ref: ../swagger/components/schemas/contact.yaml
   responses:
     404:
-      $ref: './swagger/components/responses/404.yaml'
+      $ref: ../swagger/components/responses/404.yaml
+
+securitySchemes:
+  bearerAuth:
+    type: http
+    scheme: bearer

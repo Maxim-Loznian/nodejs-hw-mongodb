@@ -7,7 +7,7 @@ import authRouter from './routers/auth.js'; // Імпорт роутера дл�
 import errorHandler from './middlewares/errorHandler.js'; // Імпорт мідлвари для обробки помилок
 import notFoundHandler from './middlewares/notFoundHandler.js'; // Імпорт мідлвари для обробки неіснуючих маршрутів
 import swaggerUi from 'swagger-ui-express'; // Імпорт swagger-ui-express
-import swaggerDocument from './docs/swagger.json' with { type: 'json' }; // Імпорт swagger документації
+import swaggerDoc from './docs/swagger.json' with { type: 'json' }; // Імпорт swagger документації
 
 const setupServer = () => {
   const app = express();
@@ -17,7 +17,7 @@ const setupServer = () => {
   app.use(express.json());
   app.use(cookieParser()); // Додайте cookie-parser
 
-  app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+  app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDoc));
 
   // Використання роутерів
   app.use('/contacts', contactsRouter);

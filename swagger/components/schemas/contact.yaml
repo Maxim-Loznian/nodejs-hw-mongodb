@@ -1,0 +1,54 @@
+
+type: object
+      properties:
+        _id:
+          type: string
+          description: Унікальний ідентифікатор контакту
+          example: '66fd29f5a8f0d2ae357e53c9'
+        name:
+          type: string
+          description: Ім'я контакту
+          example: 'Test'
+        phoneNumber:
+          type: string
+          description: Номер телефону контакту
+          example: '380564563745'
+        email:
+          type: string
+          description: Email контакту
+          example: 'john.doe@example.com'
+        isFavourite:
+          type: boolean
+          description: Чи є контакт улюбленим
+          example: false
+        contactType:
+          type: string
+          description: Тип контакту (наприклад, "home", "work")
+          example: 'home'
+        createdAt:
+          type: string
+          format: date-time
+          description: Дата і час створення контакту
+          example: '2024-05-08T16:12:14.954151'
+        updatedAt:
+          type: string
+          format: date-time
+          description: Дата і час останнього оновлення контакту
+          example: '2024-11-09T07:42:53.296+00:00'
+        photo:
+          type: string
+          description: URL фотографії контакту
+          example: 'https://res.cloudinary.com/dizfgoxks/image/upload/v1731138172/fr3atzxq'
+        userId:
+          type: string
+          description: Ідентифікатор користувача, до якого належить контакт
+          example: '672f123066fbfc327f1f668d'
+      required:
+        - _id
+        - name
+        - phoneNumber
+        - email
+        - contactType
+        - createdAt
+        - updatedAt
+        - userId
