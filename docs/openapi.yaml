@@ -38,7 +38,7 @@ components:
   responses:
     404:
       $ref: ../swagger/components/responses/404.yaml
-      securitySchemes:
-        bearerAuth:
-          type: http
-          scheme: bearer
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
