@@ -2,12 +2,12 @@
   "openapi": "3.1.0",
   "info": {
     "version": "1.0.0",
-    "title": "<назва вашого додатку>",
+    "title": "Contact book",
     "license": {
       "name": "Apache 2.0",
       "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
     },
-    "description": "<опис вашого додатку>"
+    "description": "This is documentation of contact app"
   },
   "servers": [
     {
@@ -27,12 +27,300 @@
       "description": "Auth operations."
     }
   ],
-  "paths": null,
+  "paths": {
+    "/contacts": {
+      "get": {
+        "tags": [
+          "Contacts"
+        ],
+        "summary": "Отримати список всіх контактів",
+        "operationId": "getAllContacts",
+        "description": "Цей ендпоінт повертає список всіх контактів.",
+        "responses": {
+          "200": {
+            "description": "Список контактів",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "email": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Contacts"
+        ],
+        "summary": "Створити новий контакт",
+        "operationId": "createContact",
+        "description": "Цей ендпоінт дозволяє створити новий контакт.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "email": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Контакт успішно створений"
+          }
+        }
+      }
+    },
+    "/contacts/{contactId}": {
+      "get": {
+        "tags": [
+          "Contacts"
+        ],
+        "summary": "Отримати контакт за ID",
+        "operationId": "getContactById",
+        "description": "Цей ендпоінт дозволяє отримати деталі контакту за заданим ID.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "contactId",
+            "in": "path",
+            "description": "ID контакту, який потрібно отримати",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "a1b2c3d4e5f6g7h8i9j0k1l2"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Успішна відповідь. Контакт знайдений.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "status",
+                    "message",
+                    "data"
+                  ],
+                  "properties": {
+                    "status": {
+                      "type": "integer",
+                      "example": 200
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Successfully found contact with id a1b2c3d4e5f6g7h8i9j0k1l2"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/contact"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/404",
+            "description": "Контакт не знайдений."
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Contacts"
+        ],
+        "summary": "Оновити контакт",
+        "operationId": "updateContact",
+        "description": "Цей ендпоінт дозволяє оновити інформацію про контакт.",
+        "parameters": [
+          {
+            "name": "contactId",
+            "in": "path",
+            "description": "ID контакту, який потрібно оновити",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "email": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Контакт успішно оновлений"
+          },
+          "404": {
+            "description": "Контакт не знайдений"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Contacts"
+        ],
+        "summary": "Видалити контакт",
+        "operationId": "deleteContact",
+        "description": "Цей ендпоінт дозволяє видалити контакт за його ID.",
+        "parameters": [
+          {
+            "name": "contactId",
+            "in": "path",
+            "description": "ID контакту, який потрібно видалити",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Контакт успішно видалений"
+          },
+          "404": {
+            "description": "Контакт не знайдений"
+          }
+        }
+      }
+    }
+  },
   "components": {
-    "securitySchemes": {
-      "bearerAuth": {
-        "type": "http",
-        "scheme": "bearer"
+    "schemas": {
+      "contact": {
+        "type": "object",
+        "properties": {
+          "_id": {
+            "type": "string",
+            "description": "Унікальний ідентифікатор контакту",
+            "example": "66fd29f5a8f0d2ae357e53c9"
+          },
+          "name": {
+            "type": "string",
+            "description": "Ім'я контакту",
+            "example": "Test"
+          },
+          "phoneNumber": {
+            "type": "string",
+            "description": "Номер телефону контакту",
+            "example": "380564563745"
+          },
+          "email": {
+            "type": "string",
+            "description": "Email контакту",
+            "example": "john.doe@example.com"
+          },
+          "isFavourite": {
+            "type": "boolean",
+            "description": "Чи є контакт улюбленим",
+            "example": false
+          },
+          "contactType": {
+            "type": "string",
+            "description": "Тип контакту (наприклад, \"home\", \"work\")",
+            "example": "home"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Дата і час створення контакту",
+            "example": "2024-05-08T16:12:14.954151"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Дата і час останнього оновлення контакту",
+            "example": "2024-11-09T07:42:53.296+00:00"
+          },
+          "photo": {
+            "type": "string",
+            "description": "URL фотографії контакту",
+            "example": "https://res.cloudinary.com/dizfgoxks/image/upload/v1731138172/fr3atzxq"
+          },
+          "userId": {
+            "type": "string",
+            "description": "Ідентифікатор користувача, до якого належить контакт",
+            "example": "672f123066fbfc327f1f668d"
+          }
+        },
+        "required": [
+          "_id",
+          "name",
+          "phoneNumber",
+          "email",
+          "contactType",
+          "createdAt",
+          "updatedAt",
+          "userId"
+        ]
+      }
+    },
+    "responses": {
+      "404": {
+        "description": "Contact not found",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "required": [
+                "status",
+                "message"
+              ],
+              "properties": {
+                "status": {
+                  "type": "integer",
+                  "example": 404
+                },
+                "message": {
+                  "type": "string",
+                  "example": "Contact not found"
+                }
+              }
+            }
+          }
+        }
       }
     }
   }
