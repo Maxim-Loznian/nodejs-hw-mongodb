@@ -15,6 +15,7 @@ tags:
 
 servers:
   - url: http://localhost:3000
+  - url: https://nodejs-hw-mongodb-6-ma8y.onrender.com
     #посилання на задеплоєний сайт
 paths:
   # тут будуть посилання на ендпоінти
