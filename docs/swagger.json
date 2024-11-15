@@ -76,8 +76,8 @@
             "schema": {
               "type": "string"
             },
-            "example": "age",
-            "description": "Field by which to sort the contacts. Default value is _id."
+            "example": "name",
+            "description": "Field for sorting contacts in alphabetical order. Default value is _id."
           },
           {
             "in": "query",
