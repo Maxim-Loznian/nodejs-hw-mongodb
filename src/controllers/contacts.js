@@ -164,7 +164,7 @@ export const updateContactController = async (req, res, next) => {
 
     // Підготовка даних для оновлення (якщо фото не було передано, воно залишиться undefined)
     console.log(photoUrl);
-    const data = { ...req.body, userId, photo: photoUrl };
+    const data = { contactId, ...req.body, userId, photo: photoUrl };
 
     // Оновлюємо контакт з новими даними
     const updatedContact = await updateContact(data);

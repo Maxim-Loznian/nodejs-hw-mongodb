@@ -84,9 +84,16 @@ const createContact = async (data) => {
 };
 
 // Оновити контакт
-const updateContact = async (data) => {
-  // Оновлюємо контакт
-  const updatedContact = await Contact.findOneAndUpdate(data);
+const updateContact = async ({ contactId, userId, ...updateData }) => {
+  // Фільтр: знаходимо документ за contactId і userId
+  const filter = { _id: contactId, userId };
+
+  // Оновлюємо документ і повертаємо оновлений варіант
+  const updatedContact = await Contact.findOneAndUpdate(
+    filter,             // Фільтр для пошуку
+    updateData,         // Дані для оновлення
+    { new: true }       // Опція: повернути оновлений документ
+  );
 
   return updatedContact;
 };
